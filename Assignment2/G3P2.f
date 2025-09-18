@@ -42,6 +42,7 @@ c Print results
       PRINT *, '----------------------------------------'
       PRINT *, 'Name: ', name
       PRINT *, 'Number of grades: ', num_grades
+      PRINT *, 'Grades:', grades
       PRINT *, 'Grade sum: ', sum
       PRINT *, 'Average: ', sum / num_grades
       PRINT *, '----------------------------------------'
