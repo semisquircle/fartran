@@ -51,13 +51,12 @@ c Calculate average (avoid divide by 0 error)
       END IF
 
 c Print results
-  300 FORMAT(A, F6.2, A)
-
       PRINT *
       PRINT *, '----------------------------------------'
       PRINT *, 'Name: ', name
       PRINT *, 'Number of grades: ', num_grades
 
+  300 FORMAT(A, F6.2, A)
       PRINT *, 'Grades:'
       DO i = 1, num_grades
        PRINT 300, '  ', grades(i), '%'
