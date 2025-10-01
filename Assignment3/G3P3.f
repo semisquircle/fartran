@@ -18,9 +18,14 @@ c ----------------------------------------------
        READ(*, *) file_name_in
        INQUIRE(FILE=TRIM(file_name_in), EXIST=file_in_exists)
        IF (.NOT. file_in_exists) THEN
-        PRINT *, 'File does not exist, please try again: '
+        PRINT *, 'File does not exist, please try again or enter "QUIT" to quit: '
        END IF
       END DO
+
+      IF (file_name_in .EQ. 'QUIT') THEN
+       PRINT *, 'Exiting program...'
+       STOP
+      END IF
       
       OPEN(UNIT=10, FILE=TRIM(file_name_in), STATUS='old', IOSTAT=flag)
       IF (flag .NE. 0) THEN
