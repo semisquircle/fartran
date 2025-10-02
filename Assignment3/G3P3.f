@@ -29,15 +29,15 @@ c     Initialize sum matrix to zero
       END DO
 
 c     Ask user for input file
- 10   PRINT *, 'Please enter an input file name (or QUIT to exit):'
+      PRINT *, 'Please enter an input file name (or QUIT to exit):'
+      DO WHILE (.NOT. file_in_exists)
       READ(*, *) file_name_in
       IF (file_name_in .EQ. 'QUIT') STOP
       INQUIRE(FILE=file_name_in, EXIST=file_in_exists)
       IF (.NOT. file_in_exists) THEN
        PRINT *, 'File does not exist, please try again.'
-       GO TO 10
       END IF
-
+      END DO
 c     Open input file
       OPEN(UNIT=10, FILE=file_name_in, STATUS='OLD', IOSTAT=flag)
       IF (flag .NE. 0) THEN
@@ -46,10 +46,15 @@ c     Open input file
       END IF
 
 c     Ask user for output file
- 20   PRINT *, 'Please enter an output file name (or QUIT to exit):'
+      PRINT *, 'Please enter an output file name (or QUIT to exit):'
+      DO WHILE (.NOT. file_out_exists)
       READ(*, *) file_name_out
       IF (file_name_out .EQ. 'QUIT') STOP
       INQUIRE(FILE=file_name_out, EXIST=file_out_exists)
+      IF (.NOT. file_out_exists) THEN
+       PRINT *, 'File does not exist, try again: '
+      END IF
+      END DO
       IF (file_out_exists) THEN
        PRINT *, 'File exists. Enter NEW name, OVERWRITE, or QUIT:'
        READ(*, *) response
@@ -58,7 +63,6 @@ c     Ask user for output file
         OPEN(UNIT=20, FILE=file_name_out, STATUS='OLD', IOSTAT=flag)
        ELSE
         file_name_out = response
-        GO TO 20
        END IF
       ELSE
        OPEN(UNIT=20, FILE=file_name_out, STATUS='NEW', IOSTAT=flag)
