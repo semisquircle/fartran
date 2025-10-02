@@ -48,7 +48,7 @@ c     Open input file
 c     Ask user for output file
  20   PRINT *, 'Please enter an output file name (or QUIT to exit):'
       READ(*, *) file_name_out
-      IF (file_name_out(1:4) .EQ. 'QUIT') STOP
+      IF (file_name_out .EQ. 'QUIT') STOP
       INQUIRE(FILE=file_name_out, EXIST=file_out_exists)
       IF (file_out_exists) THEN
        PRINT *, 'File exists. Enter NEW name, OVERWRITE, or QUIT:'
