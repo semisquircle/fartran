@@ -89,11 +89,27 @@ c (This made the outputs significantly more clear)
        REAL, DIMENSION(10, 10) :: X
        CHARACTER*(*) name
        INTEGER i, j, m, n
+ 
        PRINT *
+
+       DO
        PRINT *, 'Enter number of rows for matrix ', name, ':'
        READ *, m
+       IF (m .GE. 1 .AND. 10 .LE. m) THEN
+       EXIT
+       ELSE PRINT *, 'Invalid input, Please input a value between 1 and 10'
+       END IF
+       END DO
+
+       DO
        PRINT *, 'Enter number of columns for matrix ', name, ':'
        READ *, n
+       IF (n .GE. 1 .AND. 10 .LE. n) THEN
+       EXIT
+       ELSE PRINT *, 'Invalid input, Please input a value between 1 and 10'
+       END IF
+       END DO
+
        PRINT *, 'Enter elements of matrix ', name, ' (one at a time):'
        DO i = 1, m
         DO j = 1, n
