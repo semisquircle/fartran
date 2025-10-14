@@ -8,8 +8,7 @@ c ----------------------------------------------
 c Variables
 c Note: 'm' refers to columns and 'n' refers to rows
 c (If we kept 'r' and 'c' we couldn't name the third matrix 'C')
-      INTEGER, PARAMETER :: max = 10
-      REAL, DIMENSION(max, max) :: A, B, C
+      REAL, DIMENSION(10, 10) :: A, B, C
       INTEGER m1, n1, m2, n2, choice
       LOGICAL :: quit = .FALSE.
 
@@ -17,9 +16,9 @@ c Main program loop, repeats until user quits
       DO WHILE (.NOT. quit)
        CALL menu(choice)
        SELECT CASE (choice)
-      CASE (1)
-       CALL read_matrix(A, m1, n1, 'A')
-       CALL read_matrix(B, m2, n2, 'B')
+        CASE (1)
+         CALL read_matrix(A, m1, n1, 'A')
+         CALL read_matrix(B, m2, n2, 'B')
          IF (m1 .EQ. m2 .AND. n1 .EQ. n2) THEN
           CALL add_matrices(A, B, C, m1, n1)
           CALL print_matrix(A, m1, n1, 'A')
@@ -89,28 +88,28 @@ c (This made the outputs significantly more clear)
        REAL, DIMENSION(10, 10) :: X
        CHARACTER*(*) name
        INTEGER i, j, m, n
+       m = 0
+       n = 0
  
        PRINT *
 
-       DO
-       PRINT *, 'Enter number of rows for matrix ', name, ':'
-       READ *, m
-       IF (m .GE. 1 .AND. 10 .LE. m) THEN
-       EXIT
-       ELSE PRINT *, 'Invalid input, Please input a value between 1 and 10'
-       END IF
+       PRINT *, 'Enter number of rows for Matrix ', name, ' (max 10):'
+       DO WHILE (m .LT. 1 .OR. m .GT. 10)
+        READ *, m
+        IF (m .LT. 1 .OR. m .GT. 10) THEN
+         PRINT *, 'Rows must be between 1 and 10. Try again:'
+        END IF
        END DO
 
-       DO
-       PRINT *, 'Enter number of columns for matrix ', name, ':'
-       READ *, n
-       IF (n .GE. 1 .AND. 10 .LE. n) THEN
-       EXIT
-       ELSE PRINT *, 'Invalid input, Please input a value between 1 and 10'
-       END IF
+       PRINT *, 'Enter number of columns for Matrix ', name,' (max 10):'
+       DO WHILE (n .LT. 1 .OR. n .GT. 10)
+        READ *, n
+        IF (n .LT. 1 .OR. n .GT. 10) THEN
+         PRINT *, 'Columns must be between 1 and 10. Try again:'
+        END IF
        END DO
 
-       PRINT *, 'Enter elements of matrix ', name, ' (one at a time):'
+       PRINT *, 'Enter elements of Matrix ', name, ' (one at a time):'
        DO i = 1, m
         DO j = 1, n
          READ *, X(i, j)
@@ -128,9 +127,10 @@ c (This made the outputs significantly more clear)
        INTEGER i, j, m, n
        PRINT *
   100  FORMAT(A, A, ' (', I2, ' x ', I2, '):')
+  200  FORMAT(10F10.3)
        PRINT 100, 'Matrix ', name, m, n
        DO i = 1, m
-        WRITE (*, '(10F10.3)') (X(i, j), j = 1, n)
+        PRINT 200, (X(i, j), j = 1, n)
        END DO
        RETURN
       END SUBROUTINE
