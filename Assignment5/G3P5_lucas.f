@@ -149,4 +149,4 @@ c Print a x scale every five x lines
       CLOSE(10)
       CLOSE(20)
       PRINT *, 'Graphing complete. Data written to ', OUTFILE
-      END PROGRAM G3P5
+      END PROGRAM
