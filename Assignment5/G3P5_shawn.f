@@ -10,7 +10,7 @@ c ----------------------------------------------
       REAL xmin, xmax, ymin, ymax, xstep, ystep, dx
       CHARACTER*100 file_name_in, file_name_out, out_choice
       INTEGER n, i, lines_to_plot, flag
-      LOGICAL file_in_exists, overwrite, quit
+      LOGICAL file_in_exists, file_out_exists, overwrite, quit
 
       file_in_exists = .FALSE.
       file_out_exists = .FALSE.
@@ -68,51 +68,31 @@ c Prompt for output file (handle all cases)
        END IF
       END IF
 
+c Read number of points + the points themselves
       READ(10, *, IOSTAT=flag) n
-      IF (n .LT. 1) STOP "Invalid number of points."
-      IF (n .GT. max_points) THEN
-       PRINT *, "Warning: Too many points. Truncating to ", max_points
-       n = max_points
-      END IF
-
       DO i = 1, n
        READ(10, *, IOSTAT=flag) x(i), y(i)
       END DO
 
-      WRITE(20, *) "DATA POINTS"
+c Write the unsorted and unsorted points
+      WRITE(20, *) 'DATA POINTS'
       DO i = 1, n
        WRITE(20, '(2F15.8)') x(i), y(i)
       END DO
 
       CALL sort_xy(x, y, n)
-
-      WRITE(20, *) "SORTED DATA"
+      WRITE(20, *) 'SORTED DATA'
       DO i = 1, n
        WRITE(20, '(2F15.8)') x(i), y(i)
       END DO
 
-      xmin = MINVAL(x(1:n))
-      xmax = MAXVAL(x(1:n))
-      ymin = MINVAL(y(1:n))
-      ymax = MAXVAL(y(1:n))
-      ystep = (ymax - ymin) / 5.5
-      dx = MIN((xmax - xmin) / 200.0, MAX((xmax - xmin) / 20.0, 0.1 ))
-      lines_to_plot = MIN(200, MAX(20, int((xmax - xmin)/dx)))
-
-      WRITE(20, '("YMIN",F12.8," YMAX",F12.8," YSTEP",F12.8)') ymin, ymax, ystep
-      WRITE(20, '("XMIN",F12.8," XMAX",F12.8," DX",E15.8)') xmin, xmax, dx
-      WRITE(20, '("LINES TO BE PLOTTED",I10)') lines_to_plot
-      WRITE(20, *)
-
-      CALL write_y_scale(ymin, ymax, ystep)
-      CALL plot(x, y, n, xmin, xmax, ymin, ymax, dx, ystep)
-      PRINT *, "Plot written to ", TRIM(file_name_out)
+c ACTUAL PLOT STUFF WOULD GO HERE...
 
       END PROGRAM
 
       SUBROUTINE sort_xy(x, y, n)
-       REAL :: x(:), y(:)
        INTEGER n, i, j
+       REAL :: x(n), y(n)
        REAL temp_x, temp_y
 
        DO i = 1, n - 1
@@ -127,29 +107,29 @@ c Prompt for output file (handle all cases)
       END SUBROUTINE
 
       SUBROUTINE write_y_scale(ymin, ymax, ystep)
-       REAL ymin, ymax, ystep, yval
+       REAL ymin, ymax, ystep
        WRITE(20, '(6E10.4)') (ymin + (i - 1) * ystep, i = 1, 6)
       END SUBROUTINE
 
       SUBROUTINE plot(x, y, n, xmin, xmax, ymin, ymax, dx, ystep)
-       INTEGER, INTENT(in) :: n
-       REAL, INTENT(in) :: x(:), y(:), xmin, xmax, ymin, ymax, dx, ystep
-       REAL xp, yp, ytick
+       INTEGER n
+       REAL x(n), y(n), xmin, xmax, ymin, ymax, dx, ystep, xp, yp, ytick
        INTEGER i, j
        LOGICAL printed
 
        DO yp = ymin, ymax, ystep
-        WRITE(20, '(F10.4,"+")', advance='no') yp
+        WRITE(20, '(F10.4,"+")', ADVANCE='no') yp
         DO xp = xmin, xmax, (xmax-xmin) / 60.0
          printed = .FALSE.
          DO j = 1, n
-          IF (abs(x(j) - xp) .LT. dx / 2 .and. abs(y(j) - yp) .LT. ystep/2) THEN
-           WRITE(20, '(A)', advance='no') '*'
+          IF (abs(x(j) - xp) .LT. dx / 2 .AND. abs(y(j) - yp) .LT.
+     &    ystep / 2) THEN
+           WRITE(20, '(A)', ADVANCE='no') '*'
            printed = .TRUE.
            EXIT
           END IF
          END DO
-         IF (.not. printed) WRITE(20, '(A)', advance='no') ' '
+         IF (.not. printed) WRITE(20, '(A)', ADVANCE='no') ' '
         END DO
         WRITE(20, *)
        END DO
