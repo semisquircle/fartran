@@ -6,9 +6,8 @@ c ----------------------------------------------
       IMPLICIT NONE
 
       INTEGER, PARAMETER :: dp = kind(1.0d0)
-      INTEGER, PARAMETER :: nmax = 10
       INTEGER n, i, j
-      COMPLEX(dp) :: A(nmax, nmax), B(nmax)
+      COMPLEX(dp) :: A(10, 10), B(10)
       LOGICAL ok
       CHARACTER*1 response
 
@@ -17,7 +16,7 @@ c ----------------------------------------------
       PRINT *, "---------------------------------------------"
       PRINT *, "Enter the number of equations (maximum of 10):"
       READ(*, *) n
-      DO WHILE (n < 1 .OR. n > nmax)
+      DO WHILE (n < 1 .OR. n > 10)
        PRINT *, "Error: n must be between 1 and 10. Please try again:"
        READ(*, *) n
       END IF
@@ -44,7 +43,7 @@ c ----------------------------------------------
        PRINT *, " Solution:"
        PRINT *, "---------------------------------------------"
        DO i = 1, n
-        PRINT '(A,I2,A,F10.5,A,F10.5,A)', 'x(', i, ') = ', REAL(B(i)), ' + ', aimag(B(i)), 'i'
+        PRINT '(A,I2,A,F10.5,A,F10.5,A)', 'x(', i, ') = ', REAL(B(i)), ' + ', AIMAG(B(i)), 'i'
        END DO
       ELSE
        PRINT *, "No unique solution exists."
@@ -53,9 +52,9 @@ c ----------------------------------------------
       END PROGRAM
 
       SUBROUTINE input_data(A, B, n)
-       INTEGER, intent(in) :: n
+       INTEGER, INTENT(in) :: n
        INTEGER i, j
-       COMPLEX(kind(1.0d0)), intent(out) :: A(:,:), B(:)
+       COMPLEX(kind(1.0d0)), INTENT(out) :: A(:,:), B(:)
        REAL(kind(1.0d0)) :: re, im
 
        PRINT *, "Enter the coefficients and constants as pairs (Re, Im):"
@@ -73,8 +72,8 @@ c ----------------------------------------------
       END SUBROUTINE input_data
 
       SUBROUTINE display_data(A, B, n)
-       INTEGER, intent(in) :: n
-       COMPLEX(kind(1.0d0)), intent(in) :: A(:,:), B(:)
+       INTEGER, INTENT(in) :: n
+       COMPLEX(kind(1.0d0)), INTENT(in) :: A(:,:), B(:)
        INTEGER i, j
 
        PRINT *, "---------------------------------------------"
@@ -83,16 +82,16 @@ c ----------------------------------------------
        DO i = 1, n
         WRITE(*,'(A,I2,A)', advance='no') 'Eq', i, ': '
         DO j = 1, n
-         WRITE(*,'(F8.3,SP,F8.3,"i",1X)', advance='no') REAL(A(i,j)), aimag(A(i,j))
+         WRITE(*,'(F8.3,SP,F8.3,"i",1X)', advance='no') REAL(A(i,j)), AIMAG(A(i,j))
         END DO
-        WRITE(*,'(A,F8.3,SP,F8.3,"i")') " | ", REAL(B(i)), aimag(B(i))
+        WRITE(*,'(A,F8.3,SP,F8.3,"i")') " | ", REAL(B(i)), AIMAG(B(i))
        END DO
       END SUBROUTINE
 
       SUBROUTINE gauss_jordan(A, B, n, success)
-       INTEGER, intent(in) :: n
-       COMPLEX(kind(1.0d0)), intent(inout) :: A(:,:), B(:)
-       LOGICAL, intent(out) :: success
+       INTEGER, INTENT(in) :: n
+       COMPLEX(kind(1.0d0)), INTENT(inout) :: A(:,:), B(:)
+       LOGICAL, INTENT(out) :: success
        INTEGER :: i, j, k, pivot
        COMPLEX(kind(1.0d0)) :: factor, temp, pivval
 
