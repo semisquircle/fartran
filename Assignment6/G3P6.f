@@ -19,7 +19,7 @@ c ----------------------------------------------
       DO WHILE (n < 1 .OR. n > 10)
        PRINT *, "Error: n must be between 1 and 10. Please try again:"
        READ(*, *) n
-      END IF
+      END DO
 
       CALL input_data(A, B, n)
 
@@ -43,7 +43,8 @@ c ----------------------------------------------
        PRINT *, " Solution:"
        PRINT *, "---------------------------------------------"
        DO i = 1, n
-        PRINT '(A,I2,A,F10.5,A,F10.5,A)', 'x(', i, ') = ', REAL(B(i)), ' + ', AIMAG(B(i)), 'i'
+        PRINT '(A,I2,A,F10.5,A,F10.5,A)', 'x(', i, ') = ', REAL(B(i)),
+     &  ' + ', AIMAG(B(i)), 'i'
        END DO
       ELSE
        PRINT *, "No unique solution exists."
@@ -82,7 +83,8 @@ c ----------------------------------------------
        DO i = 1, n
         WRITE(*,'(A,I2,A)', advance='no') 'Eq', i, ': '
         DO j = 1, n
-         WRITE(*,'(F8.3,SP,F8.3,"i",1X)', advance='no') REAL(A(i,j)), AIMAG(A(i,j))
+         WRITE(*,'(F8.3,SP,F8.3,"i",1X)', advance='no') REAL(A(i,j)),
+     &   AIMAG(A(i,j))
         END DO
         WRITE(*,'(A,F8.3,SP,F8.3,"i")') " | ", REAL(B(i)), AIMAG(B(i))
        END DO
