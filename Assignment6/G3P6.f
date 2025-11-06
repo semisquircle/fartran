@@ -19,7 +19,7 @@ c Keep prompting user for equations until done
        PRINT *
        PRINT *, 'Enter the number of equations (maximum of 10):'
        READ(*, *) n
-       DO WHILE (n < 1 .OR. n > 10)
+       DO WHILE (n .LT. 1 .OR. n .GT. 10)
         PRINT *, 'Error: n must be between 1 and 10. Please try again:'
         READ(*, *) n
        END DO
@@ -59,13 +59,13 @@ c Receive input from keyboard for coefficients and constants
        PRINT *
        PRINT *, 'Enter the coefficients and constants as pairs (R, I):'
        DO i = 1, n
-        PRINT '(A,I2,A)', 'Equation ', i, ':'
+        PRINT '(A,I0,A)', 'Equation ', i, ':'
         DO j = 1, n
-         PRINT '(A,I2,A,I2,A)', 'A(', i, ',', j, ') ='
+         PRINT '(A,I0,A,I0,A)', 'A(', i, ', ', j, ') ='
          READ(*, *) re, im
          A(i, j) = CMPLX(re, im)
         END DO
-        PRINT '(A,I2,A)', 'B(', i, ') ='
+        PRINT '(A,I0,A)', 'B(', i, ') ='
         READ(*, *) re, im
         B(i) = CMPLX(re, im)
        END DO
@@ -83,7 +83,7 @@ c Verify the data to the user
        PRINT *, 'Entered Coefficient Matrix and Vector:'
        PRINT *, '---------------------------------------------'
 
-c Fancy precision formatting from Chapter 11
+c Fancy precision formatting (from Chapter 11)
   100  FORMAT('(', F6.3, SP, F7.3, 'i)X', SS, I0)
   200  FORMAT(' = (', F6.3, SP, F7.3, 'i)')
 
@@ -104,54 +104,60 @@ c Gauss-Jordan elimination
        COMPLEX, INTENT(INOUT) :: A(10, 10), B(10)
        INTEGER, INTENT(IN) :: n
        LOGICAL, INTENT(OUT) :: soln_exists
-       INTEGER i, j, k, pivot
-       COMPLEX factor, temp, pivval
-       REAL :: EPSILON = 1.0E-6
-       
+       INTEGER i, j, pivot
+       COMPLEX :: factor, pivval, tempB, rowA(10)
+       REAL, PARAMETER :: eps = EPSILON(REAL(A(1, 1)))
+
        soln_exists = .TRUE.
 
+c GJ implementation based (loosely) on Chapter 11
+c In short, rows in the coef matrix can be swapped or factored based
+c on a pivot value. If the pivot value is less than a very small
+c amount (epsilon), then a solution doesn't exist. 
        DO i = 1, n
         pivot = i
-        DO k = i + 1, n
-         IF (ABS(A(k, i)) .GT. ABS(A(pivot, i))) THEN
-          pivot = k
-         END IF
+        DO j = i + 1, n
+         IF (ABS(A(j, i)) .GT. ABS(A(pivot, i))) pivot = j
         END DO
 
-        IF (ABS(A(pivot, i)) .LT. EPSILON) THEN
+        IF (ABS(A(pivot, i)) .LT. eps) THEN
          soln_exists = .FALSE.
-         RETURN
         ELSE
          IF (pivot .NE. i) THEN
-          DO j = 1, n
-           temp = A(i, j)
-           A(i, j) = A(pivot, j)
-           A(pivot, j) = temp
-          END DO
-          temp = B(i)
+          rowA(1:n) = A(i, 1:n)
+          A(i, 1:n) = A(pivot, 1:n)
+          A(pivot, 1:n) = rowA(1:n)
+
+          tempB = B(i)
           B(i) = B(pivot)
-          B(pivot) = temp
+          B(pivot) = tempB
          END IF
 
          pivval = A(i, i)
-         DO j = 1, n
-          A(i, j) = A(i, j) / pivval
-         END DO
+         A(i, 1:n) = A(i, 1:n) / pivval
          B(i) = B(i) / pivval
 
          DO j = 1, n
           IF (j .NE. i) THEN
            factor = A(j, i)
-           DO k = 1, n
-            A(j, k) = A(j, k) - factor * A(i, k)
-           END DO
+           A(j, 1:n) = A(j, 1:n) - factor * A(i, 1:n)
            B(j) = B(j) - factor * B(i)
           END IF
          END DO
         END IF
        END DO
+
+c Double check each row for consistency
+       IF (soln_exists) THEN
+        DO i = 1, n
+         IF (ABS(A(i, i) - CMPLX(1.0, 0.0)) .GT. eps) THEN
+          soln_exists = .FALSE.
+         END IF
+        END DO
+       END IF
       END SUBROUTINE
 
+c Print the solution (or lack there of)
       SUBROUTINE display_soln(A, B, n, soln_exists)
        COMPLEX, INTENT(INOUT) :: A(10, 10), B(10)
        INTEGER, INTENT(IN) :: n
