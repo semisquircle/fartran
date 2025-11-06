@@ -14,6 +14,7 @@ c ----------------------------------------------
       PRINT *, 'Gauss-Jordan Solver for Complex Equations'
       PRINT *, '---------------------------------------------'
       
+c Keep prompting user for equations until done
       DO WHILE (.NOT. quit)
        PRINT *
        PRINT *, 'Enter the number of equations (maximum of 10):'
@@ -23,9 +24,9 @@ c ----------------------------------------------
         READ(*, *) n
        END DO
 
+c Keep prompting user for data until verified
        DO WHILE (.NOT. correct)
         CALL input_data(A, B, n)
-        CALL gauss_jordan(A, B, n, soln_exists)
         CALL display_data(A, B, n)
         
         PRINT *
@@ -36,18 +37,8 @@ c ----------------------------------------------
         END IF
        END DO
 
-       PRINT *
-       IF (soln_exists) THEN
-        PRINT *, '---------------------------------------------'
-        PRINT *, 'Solution:'
-        PRINT *, '---------------------------------------------'
-        DO i = 1, n
-  100    FORMAT(A, I2, A, F10.5, A, F10.5, A)
-         PRINT 100, 'x(', i, ') = ', REAL(B(i)), ' + ', AIMAG(B(i)), 'i'
-        END DO
-       ELSE
-        PRINT *, 'No unique solution exists.'
-       END IF
+       CALL gauss_jordan(A, B, n, soln_exists)
+       CALL display_soln(A, B, n, soln_exists)
 
        PRINT *
        PRINT *, 'Do you wish to continue solving equations? (Y/N)'
@@ -58,6 +49,7 @@ c ----------------------------------------------
       END DO
       END PROGRAM
 
+c Receive input from keyboard for coefficients and constants
       SUBROUTINE input_data(A, B, n)
        COMPLEX, INTENT(OUT) :: A(10, 10), B(10)
        INTEGER, INTENT(IN) :: n
@@ -79,6 +71,7 @@ c ----------------------------------------------
        END DO
       END SUBROUTINE
 
+c Verify the data to the user
       SUBROUTINE display_data(A, B, n)
        IMPLICIT NONE
        COMPLEX, INTENT(IN) :: A(10, 10), B(10)
@@ -90,59 +83,91 @@ c ----------------------------------------------
        PRINT *, 'Entered Coefficient Matrix and Vector:'
        PRINT *, '---------------------------------------------'
 
-  200  FORMAT('(', F6.3, F7.3, 'i)X', I2)
-  300  FORMAT(' = (', F6.3, F7.3, 'i)')
+c Fancy precision formatting from Chapter 11
+  100  FORMAT('(', F6.3, SP, F7.3, 'i)X', SS, I0)
+  200  FORMAT(' = (', F6.3, SP, F7.3, 'i)')
 
        DO i = 1, n
-        WRITE(*,'(A,I2,A)', ADVANCE='NO') 'Eq ', i, ': '
+        WRITE(*,'(A,I0,A)', ADVANCE='NO') 'Eq ', i, ': '
         DO j = 1, n
          IF (j .GT. 1) THEN
           WRITE(*, '(A)', ADVANCE='NO') ' + '
          END IF
-         WRITE(*, 200, ADVANCE='NO') REAL(A(i, j)), AIMAG(A(i, j)), j
+         WRITE(*, 100, ADVANCE='NO') REAL(A(i, j)), AIMAG(A(i, j)), j
         END DO
-        WRITE(*, 300) REAL(B(i)), AIMAG(B(i))
+        WRITE(*, 200) REAL(B(i)), AIMAG(B(i))
        END DO
       END SUBROUTINE
 
+c Gauss-Jordan elimination
       SUBROUTINE gauss_jordan(A, B, n, soln_exists)
        COMPLEX, INTENT(INOUT) :: A(10, 10), B(10)
        INTEGER, INTENT(IN) :: n
        LOGICAL, INTENT(OUT) :: soln_exists
        INTEGER i, j, k, pivot
        COMPLEX factor, temp, pivval
-
+       REAL :: EPSILON = 1.0E-6
+       
        soln_exists = .TRUE.
 
        DO i = 1, n
         pivot = i
         DO k = i + 1, n
-         IF (abs(A(k, i)) .GT. abs(A(pivot, i))) THEN
+         IF (ABS(A(k, i)) .GT. ABS(A(pivot, i))) THEN
           pivot = k
          END IF
         END DO
 
-        IF (abs(A(pivot, i)) .LT. 0) THEN
+        IF (ABS(A(pivot, i)) .LT. EPSILON) THEN
          soln_exists = .FALSE.
+         RETURN
         ELSE
          IF (pivot .NE. i) THEN
-          A([i, pivot], :) = A([pivot, i], :)
+          DO j = 1, n
+           temp = A(i, j)
+           A(i, j) = A(pivot, j)
+           A(pivot, j) = temp
+          END DO
           temp = B(i)
           B(i) = B(pivot)
           B(pivot) = temp
          END IF
 
          pivval = A(i, i)
-         A(i, :) = A(i, :) / pivval
+         DO j = 1, n
+          A(i, j) = A(i, j) / pivval
+         END DO
          B(i) = B(i) / pivval
 
          DO j = 1, n
           IF (j .NE. i) THEN
-          factor = A(j, i)
-          A(j, :) = A(j, :) - factor * A(i, :)
-          B(j) = B(j) - factor * B(i)
+           factor = A(j, i)
+           DO k = 1, n
+            A(j, k) = A(j, k) - factor * A(i, k)
+           END DO
+           B(j) = B(j) - factor * B(i)
           END IF
          END DO
         END IF
        END DO
+      END SUBROUTINE
+
+      SUBROUTINE display_soln(A, B, n, soln_exists)
+       COMPLEX, INTENT(INOUT) :: A(10, 10), B(10)
+       INTEGER, INTENT(IN) :: n
+       LOGICAL, INTENT(OUT) :: soln_exists
+       INTEGER i
+
+       PRINT *
+       PRINT *, '---------------------------------------------'
+       PRINT *, 'Solution:'
+       PRINT *, '---------------------------------------------'
+       IF (soln_exists) THEN
+        DO i = 1, n
+  300    FORMAT('X', I0, ' = ', F6.3, SP, F7.3, 'i')
+         PRINT 300, i, REAL(B(i)), AIMAG(B(i))
+        END DO
+       ELSE
+        PRINT *, 'No unique solution exists.'
+       END IF
       END SUBROUTINE
