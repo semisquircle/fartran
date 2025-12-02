@@ -11,6 +11,19 @@ c ----------------------------------------------
       INTEGER count_value, name_line, count_line, elim_count
       LOGICAL file_in_exists, file_out_exists, quit
 
+      TYPE :: Person
+       CHARACTER*100 name
+       INTEGER count
+       TYPE(Person), POINTER :: prev
+       TYPE(Person), POINTER :: next
+      END TYPE
+
+      TYPE(Person), POINTER :: head, tail, current
+      TYPE(Person), POINTER :: new_person, temp_person
+
+      file_in_exists = .FALSE.
+      file_out_exists = .FALSE.
+      quit = .FALSE.
       max_recs = 25
       name_line = 0
       count_line = 0
@@ -67,38 +80,25 @@ c     Prompt for output file (handle all cases)
        END IF
       END IF
 
-      TYPE :: Person
-       CHARACTER*100 name
-       INTEGER count
-       TYPE(Person), POINTER :: prev
-       TYPE(Person), POINTER :: next
-      END TYPE
+c Read people into TYPEs from input file
+      i = 1
+      DO WHILE (i .LE. max_recs .AND. .NOT. quit)
+       READ(10, '(A)') records(i)
+       IF (MOD(i, 2) == 1) THEN
+        ALLOCATE(new_person)
+        new_person%name = TRIM(records(i))
+       ELSE
+        READ(records(i), *) new_person%count
+        new_person%prev => tail
+        NULLIFY(new_person%next)
 
-      TYPE(Person), POINTER :: head, tail, current
-
-      i = 0
-      DO WHILE (i .LT. max_recs)
-       READ(10, '(A)', IOSTAT=flag) records(i + 1)
-       IF (flag .NE. 0) EXIT
-        IF (MOD(i, 2) == 0) THEN
-         name_line = i + 1
+        IF (.NOT. ASSOCIATED(tail)) THEN
+         head => new_person
         ELSE
-         count_line = i + 1
-
-         TYPE(Person), POINTER :: new_node
-         ALLOCATE(new_node)
-         new_node%name = TRIM(records(name_line))
-         READ(records(count_line), *) new_node%count
-         new_node%prev => tail
-         NULLIFY(new_node%next)
-
-         IF (.NOT. ASSOCIATED(tail)) THEN
-          tail%next => new_node
-         ELSE
-          head => new_node
-         END IF
-         tail => new_node
+         tail%next => new_person
         END IF
+        tail => new_person
+       END IF
        i = i + 1
       END DO
 
@@ -109,9 +109,9 @@ c     Prompt for output file (handle all cases)
        PRINT *, 'Current Name: ', TRIM(current%name), ' Count: ',
      & count_value
 
-       IF (count_value > 0) THEN
+       IF (count_value .GT. 0) THEN
         DO i = 1, count_value
-         IF (current%next .NE. NULL()) THEN
+         IF (.NOT. ASSOCIATED(current%next)) THEN
          current => current%next
          ELSE
           EXIT
@@ -119,7 +119,7 @@ c     Prompt for output file (handle all cases)
         END DO
        ELSE IF (count_value .LT. 0) THEN
         DO i = 1, ABS(count_value)
-         IF (current%prev .NE. NULL()) THEN
+         IF (.NOT. ASSOCIATED(current%prev)) THEN
           current => current%prev
          ELSE
           EXIT
@@ -152,10 +152,9 @@ c     Prompt for output file (handle all cases)
         tail => current%prev
        END IF
 
-       TYPE(Person), POINTER :: temp_node
-       temp_node => current
+       temp_person => current
 
-       IF (count_value > 0) THEN
+       IF (count_value .GT. 0) THEN
         current => current%next
        ELSE IF (count_value .LT. 0) THEN
         current => current%prev
@@ -163,7 +162,7 @@ c     Prompt for output file (handle all cases)
         NULLIFY(current)
        END IF
 
-       DEALLOCATE(temp_node)
+       DEALLOCATE(temp_person)
        elim_count = elim_count + 1
 
        IF (.NOT. ASSOCIATED(current)) THEN
