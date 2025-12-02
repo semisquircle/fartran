@@ -90,9 +90,9 @@ c     Prompt for output file (handle all cases)
          new_node%name = TRIM(records(name_line))
          READ(records(count_line), *) new_node%count
          new_node%prev => tail
-         new_node%next => NULL()
+         NULLIFY(new_node%next)
 
-         IF (tail .NE. NULL()) THEN
+         IF (.NOT. ASSOCIATED(tail)) THEN
           tail%next => new_node
          ELSE
           head => new_node
@@ -104,7 +104,7 @@ c     Prompt for output file (handle all cases)
 
       current => head
 
-      DO WHILE (current .NE. NULL())
+      DO WHILE (.NOT. ASSOCIATED(current))
        count_value = current%count
        PRINT *, 'Current Name: ', TRIM(current%name), ' Count: ',
      & count_value
@@ -132,7 +132,7 @@ c     Prompt for output file (handle all cases)
 
       current => head
 
-      DO WHILE (head .NE. NULL())
+      DO WHILE (.NOT. ASSOCIATED(head))
        count_value = current%count
        PRINT *, 'Elimination Count: ', elim_count
        PRINT *,'Eliminating: ',TRIM(current%name),
@@ -140,13 +140,13 @@ c     Prompt for output file (handle all cases)
 
        WRITE(20, '(A, I0)') TRIM(current%name), count_value
 
-       IF (current%prev .NE. NULL()) THEN
+       IF (.NOT. ASSOCIATED(current%prev)) THEN
         current%prev%next => current%next
        ELSE
         head => current%next
        END IF
 
-       IF (current%next .NE. NULL()) THEN
+       IF (.NOT. ASSOCIATED(current%next)) THEN
         current%next%prev => current%prev
        ELSE
         tail => current%prev
@@ -160,18 +160,18 @@ c     Prompt for output file (handle all cases)
        ELSE IF (count_value .LT. 0) THEN
         current => current%prev
        ELSE
-        current => NULL()
+        NULLIFY(current)
        END IF
 
        DEALLOCATE(temp_node)
        elim_count = elim_count + 1
 
-       IF (current .EQ. NULL()) THEN
+       IF (.NOT. ASSOCIATED(current)) THEN
         EXIT
        END IF
       END DO
 
-      IF (head .NE. NULL()) THEN
+      IF (.NOT. ASSOCIATED(head)) THEN
        PRINT *, 'Survivor: ', TRIM(head%name)
       ELSE
        PRINT *, 'No survivor found.'
@@ -180,4 +180,4 @@ c     Prompt for output file (handle all cases)
       CLOSE(10)
       CLOSE(20)
 
-      END
+      END PROGRAM
