@@ -124,7 +124,99 @@ C The records will be stored in a doubly linked-list.
             END IF
             I = I + 1
         END DO
-
-
+c Processing will begin with the first record entered.
+C The COUNT for this person will be used to count records from this starting record.
+C A positive count will be forward in the linked-list and a negative count will be backward in the linked-list.
+        INTEGER :: countValue
+        current => head
     
+        DO WHILE (current .NE. NULL())
+            countValue = current%count
+            PRINT *, 'Current Name: ', TRIM(current%name), ' Count: ', countValue
+    
+            IF (countValue > 0) THEN
+                DO I = 1, countValue
+                    IF (current%next .NE. NULL()) THEN
+                        current => current%next
+                    ELSE
+                        EXIT
+                    END IF
+                END DO
+            ELSE IF (countValue < 0) THEN
+                DO I = 1, ABS(countValue)
+                    IF (current%prev .NE. NULL()) THEN
+                        current => current%prev
+                    ELSE
+                        EXIT
+                    END IF
+                END DO
+            ELSE
+                EXIT
+            END IF
+        END DO
+c The first person counted from the start will have the count of one and the second will have the count of two, etc.
+C When the last count is reached, the COUNT for this current person will be loaded and the record for this person will be removed from the linked-list.
+c The person being eliminated and the count will be written to the file and on the screen.
+C Before the person is eliminated the first person for the COUNT will be identified.
+        current => head
+        INTEGER :: elimCount
+        elimCount = 1
+    
+        DO WHILE (head .NE. NULL())
+            countValue = current%count
+            PRINT *, 'Elimination Count: ', elimCount
+            PRINT *, 'Eliminating: ', TRIM(current%name), ' with Count: ', countValue
+    
+            ! Write to output file
+            WRITE(OUTUNIT, '(A, I0)') TRIM(current%name), countValue
+    
+            ! Remove current node from linked list
+            IF (current%prev .NE. NULL()) THEN
+                current%prev%next => current%next
+            ELSE
+                head => current%next
+            END IF
+    
+            IF (current%next .NE. NULL()) THEN
+                current%next%prev => current%prev
+            ELSE
+                tail => current%prev
+            END IF
+    
+            TYPE(Node), POINTER :: tempNode
+            tempNode => current
+    
+            ! Move to next node based on count value before deallocating
+            IF (countValue > 0) THEN
+                current => current%next
+            ELSE IF (countValue < 0) THEN
+                current => current%prev
+            ELSE
+                current => NULL()
+            END IF
+    
+            DEALLOCATE(tempNode)
+            elimCount = elimCount + 1
+    
+            IF (current .EQ. NULL()) THEN
+                EXIT
+            END IF
+        END DO
+c If the COUNT is positive the first person will be forward in the linked-list from the to be
+c removed person, if the COUNT is negative the first person will be backward in the
+c linked-list from the to be removed person.
+C The program will stop when only one person is remaining.
+C This person will be identified as the survivor.
+C Do not keep a count of the number of people in the linked-list structure to identify the
+c one person remaining, use the linked-list pointers for this identification. 
+        IF (head .NE. NULL()) THEN
+            PRINT *, 'Survivor: ', TRIM(head%name)
+        ELSE
+            PRINT *, 'No survivor found.'
+        END IF
+    
+        CLOSE(INUNIT)
+        CLOSE(OUTUNIT)
+    
+      END PROGRAM G3P7    
       
