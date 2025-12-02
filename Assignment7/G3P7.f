@@ -5,79 +5,76 @@ c Group 3 (Shawn Gallagher, Lucas Giovannelli)
 c ----------------------------------------------
       IMPLICIT NONE
 
-      CHARACTER(LEN=100) :: file_in_name, file_out_name
-      INTEGER :: i, max_recs, flag
-      CHARACTER(LEN=200) :: records(25)
+      CHARACTER(LEN=100) file_in_name, file_out_name
+      CHARACTER(LEN=200) records(25)
+      INTEGER i, max_recs, flag
+      LOGICAL file_in_exists, file_out_exists, quit
 
       max_recs = 25
 
-      DO
-       PRINT *, 'Enter the input file name (or QUIT to exit):'
-       READ *, file_in_name
-
-       IF (TRIM(file_in_name) .EQ. 'QUIT') THEN
-        PRINT *, 'Exiting program.'
-        STOP
-       END IF
-
-       OPEN(UNIT=10, FILE=file_in_name, STATUS='OLD', IOSTAT=flag)
-
-       IF (flag == 0) THEN
-        PRINT *, 'File opened successfully: ', file_in_name
-        EXIT
+c     Prompt for input file (handle quitting + file not found)
+      DO WHILE (.NOT. quit .AND. .NOT. file_in_exists)
+       PRINT *, 'Please enter an input file name (or QUIT to exit):'
+       READ(*, *) file_in_name
+       IF (file_in_name .EQ. 'QUIT') THEN
+        quit = .TRUE.
        ELSE
-        PRINT *, 'File does not exist: ', file_in_name
-       END IF
-      END DO
-
-      DO
-       PRINT *, 'Enter the output file name (or QUIT to exit):'
-       READ *, file_out_name
-
-       IF (TRIM(file_out_name) .EQ. 'QUIT') THEN
-        PRINT *, 'Exiting program.'
-        STOP
-       END IF
-
-       OPEN(UNIT=20, FILE=file_out_name, STATUS='OLD', IOSTAT=flag)
-
-       IF (flag == 0) THEN
-        PRINT *, 'File already exists: ', file_out_name
-        PRINT *,'Enter new file, or type OVERWRITE to overwrite file:'
-        READ *, file_out_name
-
-        IF (TRIM(file_out_name) .EQ. 'OVERWRITE') THEN
-         OPEN(UNIT=20, FILE=file_out_name, STATUS='REPLACE', IOSTAT=flag)
-         IF (flag == 0) THEN
-          PRINT *, 'File overwritten successfully: ', file_out_name
-          EXIT
-         ELSE
-          PRINT *, 'Error overwriting file: ', file_out_name
-         END IF
-        END IF
-       ELSE
-        OPEN(UNIT=20, FILE=file_out_name, STATUS='NEW', IOSTAT=flag)
-        IF (flag == 0) THEN
-         PRINT *, 'File created successfully: ', file_out_name
-         EXIT
+        INQUIRE(FILE=file_in_name, EXIST=file_in_exists)
+        IF (file_in_exists) THEN
+         PRINT *, 'Input file found! Reading data...'
+         OPEN(UNIT=10, FILE=file_in_name, STATUS='OLD', IOSTAT=flag)
+         PRINT *
         ELSE
-         PRINT *, 'Error creating file: ', file_out_name
+         PRINT *, 'File does not exist...'
         END IF
        END IF
       END DO
 
-      TYPE :: Node
-      CHARACTER(LEN=100) :: name
-      INTEGER :: count
-      TYPE(Node), POINTER :: prev => NULL()
-      TYPE(Node), POINTER :: next => NULL()
-      END TYPE Node
+c     Prompt for output file (handle all cases)
+      IF (.NOT. quit) THEN
+       PRINT *, 'Please enter an output file name (or QUIT to exit):'
+       READ(*, *) file_out_name
+       IF (file_out_name .EQ. 'QUIT') THEN
+        quit = .TRUE.
+       ELSE
+        INQUIRE(FILE=file_out_name, EXIST=file_out_exists)
+        IF (file_out_exists) THEN
+         PRINT *, 'File already exists. Choose one of the following:'
+         PRINT *, '- Enter a new filename to create a new file'
+         PRINT *, '- Enter OVERWRITE to overwrite the existing file'
+         PRINT *, '- Enter QUIT to exit'
+         READ(*, *) out_choice
+         SELECT CASE (out_choice)
+         CASE ('OVERWRITE')
+          PRINT *, 'Overwriting output data...'
+          OPEN(UNIT=20, FILE=file_out_name, STATUS='OLD', IOSTAT=flag)
+         CASE ('QUIT')
+          quit = .TRUE.
+         CASE DEFAULT
+          PRINT *, 'Creating new file...'
+          file_out_name = out_choice
+          OPEN(UNIT=20, FILE=file_out_name, STATUS='NEW', IOSTAT=flag)
+         END SELECT
+        ELSE
+         OPEN(UNIT=20, FILE=file_out_name, STATUS='NEW', IOSTAT=flag)
+        END IF
+        file_out_exists = .TRUE.
+        PRINT *
+       END IF
+      END IF
 
-      TYPE(Node), POINTER :: head => NULL()
-      TYPE(Node), POINTER :: tail => NULL()
-      TYPE(Node), POINTER :: current => NULL()
+      TYPE :: Person
+       CHARACTER(LEN=100) name
+       INTEGER count
+       TYPE(Person), POINTER :: prev => NULL()
+       TYPE(Person), POINTER :: next => NULL()
+      END TYPE
 
-      INTEGER :: name_line, count_line
+      TYPE(Person), POINTER :: head => NULL()
+      TYPE(Person), POINTER :: tail => NULL()
+      TYPE(Person), POINTER :: current => NULL()
+
+      INTEGER name_line, count_line
       name_line = 0
       count_line = 0
 
@@ -90,7 +87,7 @@ c ----------------------------------------------
         ELSE
          count_line = i + 1
 
-         TYPE(Node), POINTER :: new_node
+         TYPE(Person), POINTER :: new_node
          ALLOCATE(new_node)
          new_node%name = TRIM(records(name_line))
          READ(records(count_line), *) new_node%count
@@ -112,7 +109,8 @@ c ----------------------------------------------
 
       DO WHILE (current .NE. NULL())
        count_value = current%count
-       PRINT *,'Current Name: ',TRIM(current%name),' Count: ',count_value
+       PRINT *,'Current Name: ',TRIM(current%name),' Count: ',
+     & count_value
 
        IF (count_value > 0) THEN
         DO i = 1, count_value
@@ -159,8 +157,8 @@ c ----------------------------------------------
         tail => current%prev
        END IF
 
-       TYPE(Node), POINTER :: tempNode
-       tempNode => current
+       TYPE(Person), POINTER :: temp_node
+       temp_node => current
 
        IF (count_value > 0) THEN
         current => current%next
@@ -170,7 +168,7 @@ c ----------------------------------------------
         current => NULL()
        END IF
 
-       DEALLOCATE(tempNode)
+       DEALLOCATE(temp_node)
        elim_count = elim_count + 1
 
        IF (current .EQ. NULL()) THEN
