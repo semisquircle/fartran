@@ -6,10 +6,9 @@ c ----------------------------------------------
       IMPLICIT NONE
 
       CHARACTER*100 file_in_name, file_out_name, out_choice
-      CHARACTER*200 records(25)
-      INTEGER i, max_recs, flag
+      INTEGER i, max_people, flag
       INTEGER count_value, name_line, count_line, elim_count
-      LOGICAL file_in_exists, file_out_exists, quit
+      LOGICAL file_in_exists, file_out_exists, quit, eof
 
       TYPE :: Person
        CHARACTER*100 name
@@ -24,7 +23,8 @@ c ----------------------------------------------
       file_in_exists = .FALSE.
       file_out_exists = .FALSE.
       quit = .FALSE.
-      max_recs = 25
+      eof = .FALSE.
+      max_people = 25
       name_line = 0
       count_line = 0
       elim_count = 1
@@ -80,101 +80,50 @@ c     Prompt for output file (handle all cases)
        END IF
       END IF
 
+      NULLIFY(head)
+      NULLIFY(tail)
+
 c Read people into TYPEs from input file
       i = 1
-      DO WHILE (i .LE. max_recs .AND. .NOT. quit)
-       READ(10, '(A)') records(i)
-       IF (MOD(i, 2) == 1) THEN
-        ALLOCATE(new_person)
-        new_person%name = TRIM(records(i))
-       ELSE
-        READ(records(i), *) new_person%count
-        new_person%prev => tail
-        NULLIFY(new_person%next)
+      DO WHILE (.NOT. quit .AND. i .LE. max_people .AND. .NOT. eof)
+       ALLOCATE(new_person)
+       READ(10, '(A)', IOSTAT=flag) new_person%name
+       IF (flag .EQ. 0) THEN
+        READ(10, *, IOSTAT=flag) new_person%count
+        IF (flag .EQ. 0) THEN
+         NULLIFY(new_person%prev)
+         NULLIFY(new_person%next)
 
-        IF (.NOT. ASSOCIATED(tail)) THEN
-         head => new_person
+         IF (.NOT. ASSOCIATED(head)) THEN
+          head => new_person
+         ELSE
+          IF (ASSOCIATED(tail)) THEN
+           tail%next => new_person
+         END IF
+         END IF
+         tail => new_person
+         i = i + 1
         ELSE
-         tail%next => new_person
+         DEALLOCATE(new_person)
+         eof = .TRUE.
         END IF
-        tail => new_person
-       END IF
-       i = i + 1
-      END DO
-
-      current => head
-
-      DO WHILE (.NOT. ASSOCIATED(current))
-       count_value = current%count
-       PRINT *, 'Current Name: ', TRIM(current%name), ' Count: ',
-     & count_value
-
-       IF (count_value .GT. 0) THEN
-        DO i = 1, count_value
-         IF (.NOT. ASSOCIATED(current%next)) THEN
-         current => current%next
-         ELSE
-          EXIT
-         END IF
-        END DO
-       ELSE IF (count_value .LT. 0) THEN
-        DO i = 1, ABS(count_value)
-         IF (.NOT. ASSOCIATED(current%prev)) THEN
-          current => current%prev
-         ELSE
-          EXIT
-         END IF
-        END DO
        ELSE
-        EXIT
+        DEALLOCATE(new_person)
+        eof = .TRUE.
        END IF
       END DO
 
       current => head
 
-      DO WHILE (.NOT. ASSOCIATED(head))
-       count_value = current%count
-       PRINT *, 'Elimination Count: ', elim_count
-       PRINT *,'Eliminating: ',TRIM(current%name),
-     & ' with Count: ', count_value
-
-       WRITE(20, '(A, I0)') TRIM(current%name), count_value
-
-       IF (.NOT. ASSOCIATED(current%prev)) THEN
-        current%prev%next => current%next
-       ELSE
-        head => current%next
-       END IF
-
-       IF (.NOT. ASSOCIATED(current%next)) THEN
-        current%next%prev => current%prev
-       ELSE
-        tail => current%prev
-       END IF
-
-       temp_person => current
-
-       IF (count_value .GT. 0) THEN
-        current => current%next
-       ELSE IF (count_value .LT. 0) THEN
-        current => current%prev
-       ELSE
-        NULLIFY(current)
-       END IF
-
-       DEALLOCATE(temp_person)
-       elim_count = elim_count + 1
-
-       IF (.NOT. ASSOCIATED(current)) THEN
-        EXIT
-       END IF
+c Print out each person's name and count to confirm
+      PRINT *, '-------------------------------------------------------'
+      PRINT *, 'Unlucky souls:'
+      DO WHILE (ASSOCIATED(current))
+  100  FORMAT('Name: ', A, ', Count: ', I0)
+       PRINT 100, TRIM(current%name), current%count
+       current => current%next
       END DO
-
-      IF (.NOT. ASSOCIATED(head)) THEN
-       PRINT *, 'Survivor: ', TRIM(head%name)
-      ELSE
-       PRINT *, 'No survivor found.'
-      END IF
+      PRINT *, '-------------------------------------------------------'
 
       CLOSE(10)
       CLOSE(20)
