@@ -5,12 +5,16 @@ c Group 3 (Shawn Gallagher, Lucas Giovannelli)
 c ----------------------------------------------
       IMPLICIT NONE
 
-      CHARACTER(LEN=100) file_in_name, file_out_name
-      CHARACTER(LEN=200) records(25)
+      CHARACTER*100 file_in_name, file_out_name, out_choice
+      CHARACTER*200 records(25)
       INTEGER i, max_recs, flag
+      INTEGER count_value, name_line, count_line, elim_count
       LOGICAL file_in_exists, file_out_exists, quit
 
       max_recs = 25
+      name_line = 0
+      count_line = 0
+      elim_count = 1
 
 c     Prompt for input file (handle quitting + file not found)
       DO WHILE (.NOT. quit .AND. .NOT. file_in_exists)
@@ -64,24 +68,18 @@ c     Prompt for output file (handle all cases)
       END IF
 
       TYPE :: Person
-       CHARACTER(LEN=100) name
+       CHARACTER*100 name
        INTEGER count
-       TYPE(Person), POINTER :: prev => NULL()
-       TYPE(Person), POINTER :: next => NULL()
+       TYPE(Person), POINTER :: prev
+       TYPE(Person), POINTER :: next
       END TYPE
 
-      TYPE(Person), POINTER :: head => NULL()
-      TYPE(Person), POINTER :: tail => NULL()
-      TYPE(Person), POINTER :: current => NULL()
-
-      INTEGER name_line, count_line
-      name_line = 0
-      count_line = 0
+      TYPE(Person), POINTER :: head, tail, current
 
       i = 0
-      DO WHILE (i < max_recs)
+      DO WHILE (i .LT. max_recs)
        READ(10, '(A)', IOSTAT=flag) records(i + 1)
-       IF (flag /= 0) EXIT
+       IF (flag .NE. 0) EXIT
         IF (MOD(i, 2) == 0) THEN
          name_line = i + 1
         ELSE
@@ -94,22 +92,21 @@ c     Prompt for output file (handle all cases)
          new_node%prev => tail
          new_node%next => NULL()
 
-         IF (TAIL .NE. NULL()) THEN
-          TAIL%next => new_node
+         IF (tail .NE. NULL()) THEN
+          tail%next => new_node
          ELSE
-          HEAD => new_node
+          head => new_node
          END IF
-         TAIL => new_node
+         tail => new_node
         END IF
        i = i + 1
       END DO
 
-      INTEGER :: count_value
       current => head
 
       DO WHILE (current .NE. NULL())
        count_value = current%count
-       PRINT *,'Current Name: ',TRIM(current%name),' Count: ',
+       PRINT *, 'Current Name: ', TRIM(current%name), ' Count: ',
      & count_value
 
        IF (count_value > 0) THEN
@@ -120,7 +117,7 @@ c     Prompt for output file (handle all cases)
           EXIT
          END IF
         END DO
-       ELSE IF (count_value < 0) THEN
+       ELSE IF (count_value .LT. 0) THEN
         DO i = 1, ABS(count_value)
          IF (current%prev .NE. NULL()) THEN
           current => current%prev
@@ -134,14 +131,12 @@ c     Prompt for output file (handle all cases)
       END DO
 
       current => head
-      INTEGER :: elim_count
-      elim_count = 1
 
       DO WHILE (head .NE. NULL())
        count_value = current%count
        PRINT *, 'Elimination Count: ', elim_count
        PRINT *,'Eliminating: ',TRIM(current%name),
-     & ' with Count: ',count_value
+     & ' with Count: ', count_value
 
        WRITE(20, '(A, I0)') TRIM(current%name), count_value
 
@@ -162,7 +157,7 @@ c     Prompt for output file (handle all cases)
 
        IF (count_value > 0) THEN
         current => current%next
-       ELSE IF (count_value < 0) THEN
+       ELSE IF (count_value .LT. 0) THEN
         current => current%prev
        ELSE
         current => NULL()
